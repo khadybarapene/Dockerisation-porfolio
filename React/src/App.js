@@ -27,7 +27,7 @@ const Accueil = ({ onNavigateProjets }) => {
       <div className="hero">
         <div className="hero-content">
           <div className="hero-text">
-            <p className="hero-label">Portfolio 2026</p>
+            <p className="hero-label">Portfolio 2024</p>
             <h1 className="hero-title">
               <span className="gradient-text">Créer.</span>
               <span className="accent-text">Innover.</span>
@@ -41,7 +41,7 @@ const Accueil = ({ onNavigateProjets }) => {
               <button className="btn-primary" onClick={onNavigateProjets}>
                 Voir mes projets →
               </button>
-              <a href="mailto:kp@gmail.com" className="btn-ghost">
+              <a href="mailto:kmbamba567@gmail.com" className="btn-ghost">
                 Me contacter
               </a>
             </div>
@@ -193,8 +193,8 @@ const Contact = ({ toast }) => {
           <p className="contact-info-title">Réponse rapide</p>
           <p className="contact-info-sub">
             Je réponds généralement dans les 24h. Vous pouvez aussi m'écrire à{' '}
-            <a href="mailto:kp@gmail.com" className="contact-email">
-              kp@gmail.com
+            <a href="mailto:kmbamba567@gmail.com" className="contact-email">
+              kmbamba567@gmail.com
             </a>
           </p>
         </div>
@@ -301,7 +301,7 @@ export default function App() {
             <div className="footer-avatar">KP</div>
             <span className="footer-name">Khady PENE</span>
           </div>
-          <p className="footer-copy">© 2026 Portfolio Khady PENE — Tous droits réservés</p>
+          <p className="footer-copy">© 2024 Portfolio Khady PENE — Tous droits réservés</p>
           <div className="footer-links">
             <a href="https://github.com/khadybarapene" target="_blank" rel="noreferrer" className="footer-link">GitHub</a>
             <a href="https://linkedin.com" target="_blank" rel="noreferrer" className="footer-link">LinkedIn</a>

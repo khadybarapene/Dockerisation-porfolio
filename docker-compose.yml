@@ -1,0 +1,50 @@
+
+
+services:
+
+  # ── Conteneur 1 : MongoDB ──
+  mongo:
+    image: mongo:7
+    container_name: portfolio-mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - portfolio-network
+
+  # ── Conteneur 2 : API Express ──
+  api:
+    build: ./portfolio-api
+    container_name: portfolio-api
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - MONGO_URI=mongodb://mongo:27017/portfolioDB
+      - NODE_ENV=development
+    depends_on:
+      - mongo
+    networks:
+      - portfolio-network
+
+  # ── Conteneur 3 : React ──
+  react:
+    build: ./React
+    container_name: portfolio-react
+    restart: always
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+    networks:
+      - portfolio-network
+
+volumes:
+  mongo-data:
+
+networks:
+  portfolio-network:
+    driver: bridge
