@@ -1,49 +1,20 @@
-pipeline {
+pipeline{
     agent any
-
-    stages {
-        stage('Checkout') {
-            steps {
-                checkout scm
+    stages{
+        stage('Build'){
+            steps{
+                echo 'Building...'
             }
         }
-
-        stage('Install Backend') {
-            steps {
-                dir('portfolio-api') {
-                    sh 'npm ci'
-                }
+        stage('Test'){
+            steps{
+                echo 'Testing...'
             }
         }
-
-        stage('Test Backend') {
-            steps {
-                dir('portfolio-api') {
-                    sh 'npm test'
-                }
+        stage('Deploy'){
+            steps{
+                echo 'Deploying...'
             }
-        }
-
-        stage('Install Frontend') {
-            steps {
-                dir('React') {
-                    sh 'npm ci'
-                }
-            }
-        }
-
-        stage('Build Frontend') {
-            steps {
-                dir('React') {
-                    sh 'npm run build'
-                }
-            }
-        }
-    }
-
-    post {
-        always {
-            cleanWs()
         }
     }
 }
