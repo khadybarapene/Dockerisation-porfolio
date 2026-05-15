@@ -168,64 +168,11 @@ pipeline {
         success {
 
             echo '=== PIPELINE REUSSI ==='
-
-            script {
-
-                try {
-
-                    mail to: 'mn2243d@gmail.com',
-                    subject: "✅ Jenkins SUCCESS : ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                    body: """
-Le pipeline Jenkins a réussi.
-
-Commit : ${env.GIT_COMMIT?.take(7)}
-
-Build :
-${env.BUILD_URL}
-
-Application déployée :
-
-Frontend :
-http://localhost:3000
-
-Backend :
-http://localhost:5000
-"""
-
-                } catch (err) {
-
-                    echo "Mail failed (success): ${err}"
-                }
-            }
         }
 
         failure {
 
             echo '=== PIPELINE ECHOUE ==='
-
-            script {
-
-                try {
-
-                    mail to: 'khadypene267@gmail.com',
-                    subject: "❌ Jenkins FAILED : ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                    body: """
-Le pipeline Jenkins a échoué.
-
-Commit :
-${env.GIT_COMMIT?.take(7)}
-
-Build :
-${env.BUILD_URL}
-
-Consultez les logs Jenkins.
-"""
-
-                } catch (err) {
-
-                    echo "Mail failed (failure): ${err}"
-                }
-            }
         }
 
         always {
