@@ -1,10 +1,7 @@
-
-
 services:
 
-  # ── Conteneur 1 : MongoDB ──
   mongo:
-    image: mongo:7
+    image: khady2026/portfolio-mongo:latest
     container_name: portfolio-mongo
     restart: always
     ports:
@@ -14,9 +11,8 @@ services:
     networks:
       - portfolio-network
 
-  # ── Conteneur 2 : API Express ──
   api:
-    build: ./portfolio-api
+    image: khady2026/portfolio-api:latest
     container_name: portfolio-api
     restart: always
     ports:
@@ -30,9 +26,8 @@ services:
     networks:
       - portfolio-network
 
-  # ── Conteneur 3 : React ──
   react:
-    build: ./React
+    image: khady2026/portfolio-react:latest
     container_name: portfolio-react
     restart: always
     ports:

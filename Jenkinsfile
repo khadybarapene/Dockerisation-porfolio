@@ -2,23 +2,48 @@ pipeline {
     agent any
 
     stages {
-        stage('Build') {
+        stage('Checkout') {
             steps {
-                echo 'Building...'
-                // Add your build steps here
+                checkout scm
             }
         }
-        stage('Test') {
+
+        stage('Install Backend') {
             steps {
-                echo 'Testing...'
-                // Add your test steps here
+                dir('portfolio-api') {
+                    sh 'npm ci'
+                }
             }
         }
-        stage('Deploy') {
+
+        stage('Test Backend') {
             steps {
-                echo 'Deploying...'
-                // Add your deploy steps here
+                dir('portfolio-api') {
+                    sh 'npm test'
+                }
             }
+        }
+
+        stage('Install Frontend') {
+            steps {
+                dir('React') {
+                    sh 'npm ci'
+                }
+            }
+        }
+
+        stage('Build Frontend') {
+            steps {
+                dir('React') {
+                    sh 'npm run build'
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()
         }
     }
 }
