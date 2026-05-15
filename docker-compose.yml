@@ -12,6 +12,9 @@ services:
       - portfolio-network
 
   api:
+    build:
+      context: ./portfolio-api
+      dockerfile: Dockerfile
     image: khady2026/portfolio-api:latest
     container_name: portfolio-api
     restart: always
@@ -27,6 +30,9 @@ services:
       - portfolio-network
 
   react:
+    build:
+      context: ./React
+      dockerfile: Dockerfile
     image: khady2026/portfolio-react:latest
     container_name: portfolio-react
     restart: always
