@@ -1,5 +1,0 @@
-FROM mongo:7
-LABEL maintainer="khady2026"
-LABEL description="MongoDB Portfolio Khady PENE"
-EXPOSE 27017
-CMD ["mongod", "--bind_ip_all"]
