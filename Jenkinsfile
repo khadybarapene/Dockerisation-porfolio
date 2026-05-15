@@ -1,39 +1,31 @@
 pipeline {
     agent any
-
     environment {
         BACKEND_IMAGE  = 'khady2026/portfolio-api'
         FRONTEND_IMAGE = 'khady2026/portfolio-react'
     }
-
     triggers { githubPush() }
-
     options {
         timeout(time: 20, unit: 'MINUTES')
         buildDiscarder(logRotator(numToKeepStr: '5'))
     }
-
     stages {
-
         stage('Checkout') {
             steps {
                 checkout scm
             }
         }
-
         stage('Verification') {
             steps {
                 sh 'docker --version && docker compose version'
                 sh 'docker ps --format "table {{.Names}}\\t{{.Status}}"'
             }
         }
-
         stage('Docker Build') {
             steps {
                 sh "docker compose -f ${WORKSPACE}/docker-compose.yml build"
             }
         }
-
         stage('Push Docker Hub') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials',
@@ -47,18 +39,15 @@ pipeline {
                 }
             }
         }
-
         stage('Deploiement') {
-    steps {
-        sh '''
-            docker rm -f portfolio-mongo portfolio-api portfolio-react || true
-            docker compose -f ${WORKSPACE}/docker-compose.yml down --remove-orphans || true
-            docker compose -f ${WORKSPACE}/docker-compose.yml up -d --build
-            sleep 30
-        '''
-    }
-}
-
+            steps {
+                sh '''
+                    docker compose -f ${WORKSPACE}/docker-compose.yml down -v --remove-orphans || true
+                    docker compose -f ${WORKSPACE}/docker-compose.yml up -d --build --force-recreate
+                    sleep 30
+                '''
+            }
+        }
         stage('Health Check') {
             steps {
                 sh '''
@@ -74,7 +63,6 @@ pipeline {
             }
         }
     }
-
     post {
         success {
             mail to: 'khadypene267@gmail.com',
