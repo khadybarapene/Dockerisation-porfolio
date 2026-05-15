@@ -1,29 +1,34 @@
-pipeline{
+pipeline {
     agent any
-    environment{
-        IMAGE_NAME = 'portfolio-api'
-        IMAGE_NAME = 'portfolio-react'
+
+    environment {
+        HUB = 'khady2026'
+        TAG = "${BUILD_NUMBER}"
+
+        IMAGE_FRONTEND = 'portfolio-react'
+        IMAGE_BACKEND  = 'portfolio-api'
+        IMAGE_MONGO    = 'portfolio-mongo'
     }
-    stages{
-      stage('Build Backend') {
-    steps {
-        dir('portfolio-api') {
-            sh 'npm ci'
-            sh 'npm run build'   }
 
+    stages {
 
+        stage('Build Backend') {
+            steps {
+                dir('portfolio-api') {
+                    sh 'npm ci'
+                    sh 'npm run build'
+                }
+            }
         }
 
-        } 
-
-        stage('Test'){
-            steps{
+        stage('Test') {
+            steps {
                 echo 'Testing...'
             }
         }
 
-        stage('Deploy'){
-            steps{
+        stage('Deploy') {
+            steps {
                 echo 'Deploying...'
             }
         }
