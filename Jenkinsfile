@@ -7,7 +7,7 @@ pipeline {
             steps {
                 dir('portfolio-api') {
                     sh 'npm ci'
-                    sh 'npm test'
+                    sh 'MONGO_URI=mongodb://localhost:27017/portfolioDB npm test'
                 }
             }
         }
