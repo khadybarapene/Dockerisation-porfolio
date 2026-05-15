@@ -3,34 +3,32 @@ pipeline {
 
     stages {
         stage('Build frontend') {
-             steps {
+            steps {
                 echo 'Building frontend...'
-                cd 'react-frontend' 
-                npm install
-                npm run build
-                
+                dir('React') {
+                    sh 'npm install'
+                    sh 'npm run build'
+                }
             }
         }
+
         stage('Build backend') {
             steps {
                 echo 'Building backend...'
-                cd 'porfolio-api'
-                npm install
-                npm run build
-                 // Change to your backend directory
-                // Add your backend build steps here
+                dir('portfolio-api') {
+                    sh 'npm install'
+                    sh 'npm run build'
+                }
             }
         }
-    }
-}
-            }
-        }
+
         stage('Test') {
             steps {
                 echo 'Testing...'
                 // Add your test steps here
             }
         }
+
         stage('Deploy') {
             steps {
                 echo 'Deploying...'
