@@ -195,9 +195,11 @@ pipeline {
 
             echo '=== PIPELINE REUSSI ==='
 
-            mail to: 'mn2243d@gmail.com',
-                 subject: "SUCCESS - ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                 body: """
+            script {
+                try {
+                    mail to: 'mn2243d@gmail.com',
+                         subject: "SUCCESS - ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                         body: """
 Le pipeline Jenkins a reussi.
 
 Projet : ${env.JOB_NAME}
@@ -209,15 +211,21 @@ http://localhost:3000
 Backend :
 http://localhost:5000
 """
+                } catch (err) {
+                    echo "Mail failed in success post: ${err}"
+                }
+            }
         }
 
         failure {
 
             echo '=== PIPELINE ECHOUE ==='
 
-            mail to: 'mn2243d@gmail.com',
-                 subject: "ECHEC - ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                 body: """
+            script {
+                try {
+                    mail to: 'mn2243d@gmail.com',
+                         subject: "ECHEC - ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                         body: """
 Le pipeline Jenkins a echoue.
 
 Projet : ${env.JOB_NAME}
@@ -225,6 +233,10 @@ Build  : #${env.BUILD_NUMBER}
 
 Consultez les logs Jenkins.
 """
+                } catch (err) {
+                    echo "Mail failed in failure post: ${err}"
+                }
+            }
         }
 
         always {
