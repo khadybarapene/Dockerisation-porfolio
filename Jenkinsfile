@@ -1,10 +1,12 @@
+
 pipeline {
+
     agent any
 
     environment {
-        DOCKERHUB_USER = 'khady2026'
-        BACKEND_IMAGE = 'khady2026/portfolio-api'
-        FRONTEND_IMAGE = 'khady2026/portfolio-react'
+        DOCKERHUB_USER      = 'khady2026'
+        BACKEND_IMAGE       = 'khady2026/portfolio-api'
+        FRONTEND_IMAGE      = 'khady2026/portfolio-react'
         COMPOSE_PROJECT_NAME = 'portfolio'
     }
 
@@ -21,17 +23,22 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                echo '=== ETAPE 1 : Recuperation du code source depuis GitHub ==='
+
+                echo '=== ETAPE 1 : Recuperation du code source ==='
+
                 checkout scm
+
                 echo "=== Commit : ${env.GIT_COMMIT?.take(7)} ==="
             }
         }
 
         stage('Verification') {
             steps {
-                echo '=== ETAPE 2 : Verification de l environnement Docker ==='
+
+                echo '=== ETAPE 2 : Verification environnement Docker ==='
 
                 sh 'docker --version'
+
                 sh 'docker compose version'
 
                 sh "ls -la ${WORKSPACE}/"
@@ -42,6 +49,7 @@ pipeline {
 
         stage('Docker Build') {
             steps {
+
                 echo '=== ETAPE 3 : Construction des images Docker ==='
 
                 sh """
@@ -58,7 +66,7 @@ pipeline {
         stage('Push Docker Hub') {
             steps {
 
-                echo '=== ETAPE 4 : Push des images vers Docker Hub ==='
+                echo '=== ETAPE 4 : Push Docker Hub ==='
 
                 withCredentials([
                     usernamePassword(
@@ -84,7 +92,7 @@ pipeline {
                     '''
                 }
 
-                echo '=== Images poussees vers Docker Hub ==='
+                echo '=== Images poussees avec succes ==='
             }
         }
 
@@ -94,65 +102,84 @@ pipeline {
                 echo '=== ETAPE 5 : Deploiement des conteneurs ==='
 
                 sh '''
-                    echo "Suppression des anciens conteneurs..."
-                    docker rm -f portfolio-react portfolio-api portfolio-mongo || true
-                '''
+                    echo "=== Suppression anciens conteneurs ==="
 
-                sh """
+                    docker rm -f portfolio-react || true
+                    docker rm -f portfolio-api || true
+                    docker rm -f portfolio-mongo || true
+
+                    echo "=== Docker Compose Down ==="
+
                     docker compose \
                     -p ${COMPOSE_PROJECT_NAME} \
                     -f ${WORKSPACE}/docker-compose.yml \
                     down --remove-orphans || true
-                """
 
-                sh """
+                    echo "=== Nettoyage Docker ==="
+
+                    docker system prune -f || true
+
+                    echo "=== Demarrage nouveaux conteneurs ==="
+
                     docker compose \
                     -p ${COMPOSE_PROJECT_NAME} \
                     -f ${WORKSPACE}/docker-compose.yml \
-                    up -d --remove-orphans
-                """
+                    up -d --build --remove-orphans
 
-                echo '=== Attente demarrage services ==='
+                    echo "=== Attente demarrage services ==="
 
-                sh 'sleep 30'
+                    sleep 30
+                '''
             }
         }
 
         stage('Health Check') {
             steps {
 
-                echo '=== ETAPE 6 : Verification de l application ==='
+                echo '=== ETAPE 6 : Verification application ==='
 
-                echo '=== Test Backend API ==='
+                echo '=== Verification Backend API ==='
 
                 sh '''
-                    for i in 1 2 3 4 5; do
+                    for i in 1 2 3 4 5
+                    do
+                        if curl -fsS http://127.0.0.1:5000/
+                        then
+                            echo "Backend OK"
+                            exit 0
+                        fi
 
-                        curl -fsS http://127.0.0.1:5000/ && break || {
+                        echo "Tentative $i echouee"
 
-                            echo "Tentative $i echouee"
+                        docker logs --tail 50 portfolio-api || true
 
-                            docker logs --tail 50 portfolio-api || true
-
-                            sleep 5
-                        }
+                        sleep 5
                     done
 
-                    curl -fsS http://127.0.0.1:5000/ || exit 1
+                    echo "Backend inaccessible"
+
+                    exit 1
                 '''
 
-                echo '=== Test Frontend React ==='
+                echo '=== Verification Frontend React ==='
 
                 sh '''
-                    for i in 1 2 3 4 5; do
+                    for i in 1 2 3 4 5
+                    do
+                        if curl -fsS http://127.0.0.1:3000/
+                        then
+                            echo "Frontend OK"
+                            exit 0
+                        fi
 
-                        curl -fsS http://127.0.0.1:3000 && exit 0 || {
+                        echo "Tentative $i echouee"
 
-                            echo "Tentative $i echouee"
+                        docker logs --tail 50 portfolio-react || true
 
-                            sleep 5
-                        }
+                        sleep 5
                     done
+
+                    echo "Frontend inaccessible"
 
                     exit 1
                 '''
@@ -167,11 +194,37 @@ pipeline {
         success {
 
             echo '=== PIPELINE REUSSI ==='
+
+            mail to: 'mn2243d@gmail.com',
+                 subject: "SUCCESS - ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                 body: """
+Le pipeline Jenkins a reussi.
+
+Projet : ${env.JOB_NAME}
+Build  : #${env.BUILD_NUMBER}
+
+Frontend :
+http://localhost:3000
+
+Backend :
+http://localhost:5000
+"""
         }
 
         failure {
 
             echo '=== PIPELINE ECHOUE ==='
+
+            mail to: 'mn2243d@gmail.com',
+                 subject: "ECHEC - ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                 body: """
+Le pipeline Jenkins a echoue.
+
+Projet : ${env.JOB_NAME}
+Build  : #${env.BUILD_NUMBER}
+
+Consultez les logs Jenkins.
+"""
         }
 
         always {
@@ -182,4 +235,3 @@ pipeline {
         }
     }
 }
-
