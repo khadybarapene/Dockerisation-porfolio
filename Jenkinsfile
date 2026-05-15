@@ -49,14 +49,15 @@ pipeline {
         }
 
         stage('Deploiement') {
-            steps {
-                sh '''
-                    docker compose -f ${WORKSPACE}/docker-compose.yml down --remove-orphans || true
-                    docker compose -f ${WORKSPACE}/docker-compose.yml up -d --build
-                    sleep 30
-                '''
-            }
-        }
+    steps {
+        sh '''
+            docker rm -f portfolio-mongo portfolio-api portfolio-react || true
+            docker compose -f ${WORKSPACE}/docker-compose.yml down --remove-orphans || true
+            docker compose -f ${WORKSPACE}/docker-compose.yml up -d --build
+            sleep 30
+        '''
+    }
+}
 
         stage('Health Check') {
             steps {
