@@ -1,35 +1,36 @@
 pipeline {
     agent any
 
-    environment {
-        HUB = 'khady2026'
-        TAG = "${BUILD_NUMBER}"
-
-        IMAGE_FRONTEND = 'portfolio-react'
-        IMAGE_BACKEND  = 'portfolio-api'
-        IMAGE_MONGO    = 'portfolio-mongo'
-    }
-
     stages {
 
-        stage('Build Backend') {
+        stage('Backend') {
             steps {
                 dir('portfolio-api') {
                     sh 'npm ci'
+                    sh 'npm test'
+                }
+            }
+        }
+
+        stage('Frontend Install') {
+            steps {
+                dir('React') {
+                    sh 'npm ci'
+                }
+            }
+        }
+
+        stage('Frontend Build') {
+            steps {
+                dir('React') {
                     sh 'npm run build'
                 }
             }
         }
 
-        stage('Test') {
-            steps {
-                echo 'Testing...'
-            }
-        }
-
         stage('Deploy') {
             steps {
-                echo 'Deploying...'
+                echo 'Deploy OK'
             }
         }
     }
