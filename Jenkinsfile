@@ -73,9 +73,9 @@ pipeline {
             steps {
                 echo '=== ETAPE 5 : Deploiement des conteneurs ==='
                 echo '    Arret des anciens conteneurs...'
-                sh "docker compose -f ${WORKSPACE}/docker-compose.yml down || true"
+                sh "docker compose -f ${WORKSPACE}/docker-compose.yml down --remove-orphans || true"
                 echo '    Demarrage des nouveaux conteneurs (-d = arriere-plan)...'
-                sh "docker compose -f ${WORKSPACE}/docker-compose.yml up -d"
+                sh "docker compose -f ${WORKSPACE}/docker-compose.yml up -d --remove-orphans"
                 echo '    Attente demarrage MongoDB + Backend (30s)...'
                 sh 'sleep 30'
             }
@@ -85,17 +85,28 @@ pipeline {
         stage('Health Check') {
             steps {
                 echo '=== ETAPE 6 : Verification de l application ==='
-                echo '    Test API Backend (depuis le conteneur portfolio-api)...'
-                sh 'docker exec portfolio-api wget --spider -q http://127.0.0.1:5000/api/health'
-                echo '    Test Frontend React (depuis le conteneur portfolio-react)...'
-                sh '''
-                    for i in 1 2 3 4 5; do
-                        docker exec portfolio-react wget --spider -q http://127.0.0.1:80 && exit 0
-                        echo "    Tentative $i echouee, retry dans 5s..."
-                        sleep 5
-                    done
-                    exit 1
-                '''
+                    echo '    Test API Backend (via host curl)...'
+                    sh '''
+                        for i in 1 2 3 4 5; do
+                            curl -fsS http://127.0.0.1:5000/ && break || {
+                                echo "    Tentative $i echouee, affichage des derniers logs du backend..."
+                                docker logs --tail 50 portfolio-api || true
+                                sleep 5
+                            }
+                        done
+                        # verify curl succeeded
+                        curl -fsS http://127.0.0.1:5000/ || (echo 'API unreachable' && exit 1)
+                    '''
+                    echo '    Test Frontend React (via host curl)...'
+                    sh '''
+                        for i in 1 2 3 4 5; do
+                            curl -fsS http://127.0.0.1:3000 && exit 0 || {
+                                echo "    Tentative $i echouee, retry dans 5s..."
+                                sleep 5
+                            }
+                        done
+                        exit 1
+                    '''
                 echo '=== Application operationnelle ==='
             }
         }
@@ -106,9 +117,11 @@ pipeline {
     post {
         success {
             echo '=== PIPELINE REUSSI - Application deployee ! Frontend: http://localhost | API: http://localhost:5000/api/health ==='
-            mail to: 'mn2243d@gmail.com',
-                 subject: "✅ Jenkins - Build SUCCESS : ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                 body: """Le pipeline ${env.JOB_NAME} a réussi.
+            script {
+                try {
+                    mail to: 'mn2243d@gmail.com',
+                         subject: "✅ Jenkins - Build SUCCESS : ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                         body: """Le pipeline ${env.JOB_NAME} a réussi.
 
 Commit : ${env.GIT_COMMIT?.take(7)}
 Build  : ${env.BUILD_URL}
@@ -117,18 +130,28 @@ Application déployée :
 - Frontend : http://localhost
 - API      : http://localhost:5000/api/health
 """
+                } catch (err) {
+                    echo "Mail failed (success): ${err}"
+                }
+            }
         }
         failure {
             echo '=== PIPELINE ECHOUE - Consultez les logs ci-dessus pour identifier le stage en erreur ==='
-            mail to: 'khadypene267@gmail.com',
-                 subject: "❌ Jenkins - Build FAILED : ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                 body: """Le pipeline ${env.JOB_NAME} a échoué.
+            script {
+                try {
+                    mail to: 'khadypene267@gmail.com',
+                         subject: "❌ Jenkins - Build FAILED : ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                         body: """Le pipeline ${env.JOB_NAME} a échoué.
 
 Commit : ${env.GIT_COMMIT?.take(7)}
 Build  : ${env.BUILD_URL}
 
 Consultez les logs pour identifier l'erreur.
 """
+                } catch (err) {
+                    echo "Mail failed (failure): ${err}"
+                }
+            }
         }
         always {
             sh 'docker ps --format "table {{.Names}}\\t{{.Status}}\\t{{.Ports}}" || true'
