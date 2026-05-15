@@ -1,18 +1,13 @@
-
-
 services:
 
   mongo:
     image: mongo:7
     container_name: portfolio-mongo
     restart: unless-stopped
-
     ports:
       - "27017:27017"
-
     volumes:
       - mongo-data:/data/db
-
     networks:
       - portfolio-network
 
@@ -20,24 +15,17 @@ services:
     build:
       context: ./portfolio-api
       dockerfile: Dockerfile
-
     image: khady2026/portfolio-api:latest
-
     container_name: portfolio-api
-
     restart: unless-stopped
-
     ports:
       - "5000:5000"
-
     environment:
       PORT: 5000
       MONGO_URI: mongodb://mongo:27017/portfolioDB
       NODE_ENV: production
-
     depends_on:
       - mongo
-
     networks:
       - portfolio-network
 
@@ -45,19 +33,13 @@ services:
     build:
       context: ./React
       dockerfile: Dockerfile
-
     image: khady2026/portfolio-react:latest
-
     container_name: portfolio-react
-
     restart: unless-stopped
-
     ports:
       - "3000:80"
-
     depends_on:
       - api
-
     networks:
       - portfolio-network
 
@@ -67,4 +49,3 @@ volumes:
 networks:
   portfolio-network:
     driver: bridge
-
