@@ -68,28 +68,47 @@ pipeline {
 
                 echo '=== ETAPE 4 : Push Docker Hub ==='
 
-                withCredentials([
-                    usernamePassword(
-                        credentialsId: 'dockerhub-credentials',
-                        usernameVariable: 'DOCKER_USER',
-                        passwordVariable: 'DOCKER_PASS'
-                    )
-                ]) {
+                script {
+                    def loginStatus = 1
+                    withCredentials([
+                        usernamePassword(
+                            credentialsId: 'dockerhub-credentials',
+                            usernameVariable: 'DOCKER_USER',
+                            passwordVariable: 'DOCKER_PASS'
+                        )
+                    ]) {
+                        loginStatus = sh(script: 'echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin', returnStatus: true)
+                    }
 
-                    sh '''
-                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                    if (loginStatus != 0) {
+                        error('Docker Hub login failed, cannot push images')
+                    }
 
+                    def pushLatestStatus = sh(script: '''
+                        docker tag ${BACKEND_IMAGE}:latest ${BACKEND_IMAGE}:latest
+                        docker tag ${FRONTEND_IMAGE}:latest ${FRONTEND_IMAGE}:latest
+
+                        docker push ${BACKEND_IMAGE}:latest
+                        docker push ${FRONTEND_IMAGE}:latest
+                    ''', returnStatus: true)
+
+                    if (pushLatestStatus != 0) {
+                        error('Docker push latest images failed')
+                    }
+
+                    def pushTagStatus = sh(script: '''
                         docker tag ${BACKEND_IMAGE}:latest ${BACKEND_IMAGE}:${BUILD_NUMBER}
                         docker tag ${FRONTEND_IMAGE}:latest ${FRONTEND_IMAGE}:${BUILD_NUMBER}
 
-                        docker push ${BACKEND_IMAGE}:latest
                         docker push ${BACKEND_IMAGE}:${BUILD_NUMBER}
-
-                        docker push ${FRONTEND_IMAGE}:latest
                         docker push ${FRONTEND_IMAGE}:${BUILD_NUMBER}
+                    ''', returnStatus: true)
 
-                        docker logout
-                    '''
+                    if (pushTagStatus != 0) {
+                        echo "Docker push build tags failed, skipping build-number tags. Latest images were pushed."
+                    }
+
+                    sh 'docker logout'
                 }
 
                 echo '=== Images poussees avec succes ==='
