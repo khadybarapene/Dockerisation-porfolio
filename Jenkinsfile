@@ -4,13 +4,15 @@ pipeline {
     stages {
 
         stage('Backend') {
-            steps {
-                dir('portfolio-api') {
-                    sh 'npm ci'
-                    sh 'MONGO_URI=mongodb://localhost:27017/portfolioDB npm test'
-                }
-            }
-        }
+    steps {
+        dir('portfolio-api') {
+            sh 'sudo systemctl start mongod || true'
+            sh 'sleep 3'
+            sh 'npm ci'
+            sh 'MONGO_URI=mongodb://localhost:27017/portfolioDB npm test'
+           }
+         }
+}
 
         stage('Frontend Install') {
             steps {
