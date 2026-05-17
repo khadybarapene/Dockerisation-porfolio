@@ -24,3 +24,4 @@ build/
 
 # React
 /src/**/*.cache
+React/build/
